@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>白板</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #0c0c1d;
+        }
+
+        #starry-sky {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        #app {
+            position: relative;
+            z-index: 1;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .shooting-star {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes shootingStar {
+            0% {
+                transform: translateX(0) translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(var(--travel-distance)) translateY(var(--travel-distance-y));
+                opacity: 0;
+            }
+        }
+
+        /* 信封样式 */
+        .envelope {
+            position: relative;
+            width: 300px;
+            height: 200px;
+            background-color: #f5f5f5;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            transition: transform 0.5s;
+            cursor: pointer;
+        }
+
+        .envelope:hover {
+            transform: scale(1.05);
+        }
+
+        .envelope-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0;
+            border-bottom: 100px solid #e6e6e6;
+            border-left: 150px solid transparent;
+            border-right: 150px solid transparent;
+            box-sizing: border-box;
+            transform-origin: top;
+            transform: rotateX(180deg);
+            z-index: 3;
+            transition: transform 0.5s;
+        }
+
+        .envelope:hover .envelope-top {
+            transform: rotateX(0deg);
+        }
+
+        .envelope-body {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #e6e6e6;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .envelope-pattern {
+            position: absolute;
+            width: 90%;
+            height: 90%;
+            border: 2px solid #d1d1d1;
+            border-radius: 5px;
+        }
+
+        .envelope-text {
+            position: relative;
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: "楷体", "KaiTi", serif;
+        }
+
+        .envelope-seal {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: #d00;
+            border-radius: 50%;
+            right: 20px;
+            top: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 5;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .envelope-seal:hover {
+            transform: scale(1.1);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .envelope-seal::after {
+            content: "♥";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 20px;
+        }
+
+        /* 信件内容样式 */
+        .letter {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .letter.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .letter-content {
+            width: 80%;
+            max-width: 600px;
+            background-color: #fff8f8;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            font-family: "楷体", "KaiTi", serif;
+            font-size: 22px;
+            line-height: 1.8;
+            color: #333;
+            position: relative;
+            text-align: left;
+            overflow: hidden;
+        }
+
+        .letter-text {
+            white-space: pre-line;
+        }
+
+        .letter-text span {
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+
+        .letter-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            color: #999;
+            font-size: 30px;
+            line-height: 30px;
+            text-align: center;
+            transition: color 0.3s;
+        }
+
+        .letter-close:hover {
+            color: #333;
+        }
+
+        /* 弹窗样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 80%;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            margin-bottom: 30px;
+            color: #d4547c;
+            font-weight: bold;
+            font-family: "楷体", "KaiTi", serif;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .modal-button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            font-family: "楷体", "KaiTi", serif;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .modal-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-button.yes {
+            background-color: #ff4d80;
+            color: white;
+        }
+
+        .modal-button.no {
+            background-color: #f8f8f8;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+
+        /* 跳动的桃心 */
+        .heart-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 240, 245, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .heart-container.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .heart {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            background-color: #ff5a8c;
+            transform: rotate(45deg);
+            animation: heartbeat 1.2s infinite ease-in-out;
+        }
+
+        .heart::before,
+        .heart::after {
+            content: "";
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-color: #ff5a8c;
+            border-radius: 50%;
+        }
+
+        .heart::before {
+            top: -50px;
+            left: 0;
+        }
+
+        .heart::after {
+            top: 0;
+            left: -50px;
+        }
+
+        .heart-message {
+            position: absolute;
+            bottom: 20%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 32px;
+            color: #ff5a8c;
+            font-weight: bold;
+            font-family: "楷体", "KaiTi", serif;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes heartbeat {
+            0% {
+                transform: rotate(45deg) scale(0.8);
+            }
+
+            5% {
+                transform: rotate(45deg) scale(0.9);
+            }
+
+            10% {
+                transform: rotate(45deg) scale(0.8);
+            }
+
+            15% {
+                transform: rotate(45deg) scale(1);
+            }
+
+            50% {
+                transform: rotate(45deg) scale(0.8);
+            }
+
+            100% {
+                transform: rotate(45deg) scale(0.8);
+            }
+        }
+
+        @keyframes floating {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="starry-sky"></canvas>
+    <div id="app">
+        <div class="envelope">
+            <div class="envelope-top"></div>
+            <div class="envelope-body">
+                <div class="envelope-pattern"></div>
+                <div class="envelope-seal" id="heart-seal"></div>
+                <div class="envelope-text">XXX亲启！</div>
+            </div>
+        </div>
+
+        <div class="letter" id="letter-container">
+            <div class="letter-content">
+                <!-- <div class="letter-close" id="letter-close">×</div> -->
+                <div class="letter-text" id="letter-text"></div>
+            </div>
+        </div>
+
+        <!-- 选择弹窗 -->
+        <div class="modal" id="choice-modal">
+            <div class="modal-content">
+                <div class="modal-title">小露露，做我女朋友好不好</div>
+                <div class="modal-buttons">
+                    <button class="modal-button yes" id="yes-button">好</button>
+                    <button class="modal-button no" id="no-button">不好</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 再给一次机会弹窗 -->
+        <div class="modal" id="retry-modal">
+            <div class="modal-content">
+                <div class="modal-title">再给你一次机会</div>
+                <div class="modal-buttons">
+                    <button class="modal-button yes" id="retry-button">重新选择</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 跳动的桃心 -->
+        <div class="heart-container" id="final-heart">
+            <div class="heart"></div>
+            <div class="heart-message">我们在一起啦！</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const canvas = document.getElementById('starry-sky');
+            const ctx = canvas.getContext('2d');
+
+            // 设置画布大小为窗口大小
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // 星星数组
+            const stars = [];
+            const numStars = 200;
+
+            // 创建星星
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 1.5 + 0.5,
+                    opacity: Math.random() * 0.8 + 0.2,
+                    speed: Math.random() * 0.05 + 0.01
+                });
+            }
+
+            // 绘制函数
+            function animate() {
+                // 清空画布
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 绘制星星
+                stars.forEach(star => {
+                    // 更新位置
+                    star.y -= star.speed;
+
+                    // 如果星星超出画布顶部，将其放回底部
+                    if (star.y < 0) {
+                        star.y = canvas.height;
+                        star.x = Math.random() * canvas.width;
+                    }
+
+                    // 绘制星星
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity * (0.5 + 0.5 * Math.sin(Date.now() * 0.001 + star.x))})`;
+                    ctx.fill();
+                });
+
+                // 请求下一帧动画
+                requestAnimationFrame(animate);
+            }
+
+            // 开始动画
+            animate();
+
+            // 当窗口大小改变时，调整画布大小
+            window.addEventListener('resize', function () {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+
+            // 添加流星效果
+            function createShootingStar() {
+                const shootingStar = document.createElement('div');
+                shootingStar.className = 'shooting-star';
+                document.body.appendChild(shootingStar);
+
+                // 统一方向：所有流星都向右上角运动
+                // 随机决定流星从底部还是左侧出现
+                const startFromBottom = Math.random() > 0.5;
+                let startX, startY;
+
+                if (startFromBottom) {
+                    // 从底部出现
+                    startX = Math.random() * (window.innerWidth * 0.8);
+                    startY = window.innerHeight + 30;
+                } else {
+                    // 从左侧出现
+                    startX = -30;
+                    startY = Math.random() * window.innerHeight * 0.9 + window.innerHeight * 0.1;
+                }
+
+                // 计算移动距离 - 统一向右上角移动
+                // 随机确定移动幅度，但保持右上方向
+                const moveRightDistance = window.innerWidth - startX + Math.random() * 100 + 30;
+                const moveUpDistance = startY + Math.random() * 100 + 30;
+
+                // 随机速度 (持续时间)
+                const speed = Math.random() * 3; // 0.5-3.5秒
+
+                // 创建流星主体（亮点）
+                const meteorHead = document.createElement('div');
+                meteorHead.style.position = 'absolute';
+                meteorHead.style.width = '4px';
+                meteorHead.style.height = '4px';
+                meteorHead.style.borderRadius = '50%';
+                meteorHead.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                meteorHead.style.boxShadow = '0 0 10px 2px rgba(255, 255, 255, 0.8)';
+                shootingStar.appendChild(meteorHead);
+
+                // 创建拖尾粒子 - 减少粒子数量使拖尾变短
+                const trailCount = Math.floor(Math.random() * 8) + 10; // 10-18个拖尾粒子，比之前少
+
+                for (let i = 0; i < trailCount; i++) {
+                    const trail = document.createElement('div');
+                    const size = 3 * (1 - i / trailCount); // 尺寸逐渐减小
+                    const distance = i * 3; // 粒子之间的距离减小，从4减为3
+                    const opacity = 0.8 * (1 - i / trailCount); // 透明度逐渐降低
+
+                    trail.style.position = 'absolute';
+                    trail.style.width = size + 'px';
+                    trail.style.height = size + 'px';
+
+                    // 拖尾方向 - 左下方向，与运动方向相反
+                    const diagonalDistance = distance / Math.sqrt(2); // 对角线距离
+                    trail.style.left = -diagonalDistance + 'px';
+                    trail.style.top = diagonalDistance + 'px';
+
+                    trail.style.borderRadius = '50%';
+                    trail.style.backgroundColor = 'rgba(255, 255, 255, ' + opacity + ')';
+                    trail.style.boxShadow = '0 0 ' + (size * 2) + 'px rgba(255, 255, 255, ' + (opacity * 0.8) + ')';
+
+                    shootingStar.appendChild(trail);
+                }
+
+                // 设置CSS属性
+                shootingStar.style.left = startX + 'px';
+                shootingStar.style.top = startY + 'px';
+                shootingStar.style.setProperty('--travel-distance', moveRightDistance + 'px');
+                shootingStar.style.setProperty('--travel-distance-y', -moveUpDistance + 'px');
+                shootingStar.style.animation = 'shootingStar ' + speed + 's linear forwards';
+
+                // 动画结束后移除流星
+                shootingStar.addEventListener('animationend', function () {
+                    document.body.removeChild(shootingStar);
+                });
+            }
+
+            // 定期创建流星
+            function shootingStarLoop() {
+                // 随机间隔创建流星 (1-5秒)
+                const delay = Math.random() * 4000 + 1000;
+
+                // 创建流星
+                createShootingStar();
+
+                // 随机决定是否创建额外的流星（30%概率）
+                if (Math.random() < 0.3) {
+                    setTimeout(function () {
+                        createShootingStar();
+                    }, Math.random() * 500 + 100);
+                }
+
+                // 继续循环
+                setTimeout(shootingStarLoop, delay);
+            }
+
+            // 开始流星循环
+            shootingStarLoop();
+
+            // 初始时立即创建几个流星
+            for (let i = 0; i < 3; i++) {
+                setTimeout(function () {
+                    createShootingStar();
+                }, i * 800);
+            }
+
+            // 信件内容逐字渲染
+            const heartSeal = document.getElementById('heart-seal');
+            const letterContainer = document.getElementById('letter-container');
+            const letterText = document.getElementById('letter-text');
+            const letterClose = document.getElementById('letter-close');
+
+            const letterContent = "今天是23号，是你的出生日，我希望也是我们的恋爱纪念日。我喜欢你，喜欢你的善良、可爱、温柔、情绪成熟、对生活的热忱、对万事万物的理解，喜欢你眼神的温度、让我感到温暖的能量场，总之喜欢独特的你、唯一的你。";
+
+            function typeLetterEffect(text, element, speed = 200) {
+                // 清空现有内容
+                element.innerHTML = '';
+
+                // 准备文本
+                const chars = text.split('');
+
+                // 为每个字符创建 span 元素
+                chars.forEach((char, index) => {
+                    const span = document.createElement('span');
+                    span.textContent = char;
+                    element.appendChild(span);
+                });
+
+                // 获取所有 span 元素
+                const spans = element.querySelectorAll('span');
+
+                // 逐个显示字符
+                spans.forEach((span, index) => {
+                    setTimeout(() => {
+                        span.style.opacity = 1;
+
+                        // 如果是最后一个字符，显示选择弹窗
+                        if (index === spans.length - 1) {
+                            setTimeout(() => {
+                                showChoiceModal();
+                            }, 1000); // 等待1秒后显示弹窗
+                        }
+                    }, index * speed);
+                });
+            }
+
+            // 点击桃心展示信件
+            heartSeal.addEventListener('click', function () {
+                letterContainer.classList.add('show');
+                // 启动打字效果
+                typeLetterEffect(letterContent, letterText, 50);
+            });
+
+            // 处理选择弹窗
+            const choiceModal = document.getElementById('choice-modal');
+            const retryModal = document.getElementById('retry-modal');
+            const finalHeart = document.getElementById('final-heart');
+            const yesButton = document.getElementById('yes-button');
+            const noButton = document.getElementById('no-button');
+            const retryButton = document.getElementById('retry-button');
+
+            function showChoiceModal() {
+                choiceModal.classList.add('show');
+            }
+
+            // 点击"好"按钮
+            yesButton.addEventListener('click', function () {
+                choiceModal.classList.remove('show');
+                setTimeout(() => {
+                    finalHeart.classList.add('show');
+                }, 300);
+            });
+
+            // 点击"不好"按钮
+            noButton.addEventListener('click', function () {
+                choiceModal.classList.remove('show');
+                setTimeout(() => {
+                    retryModal.classList.add('show');
+                }, 300);
+            });
+
+            // 点击"重新选择"按钮
+            retryButton.addEventListener('click', function () {
+                retryModal.classList.remove('show');
+                setTimeout(() => {
+                    showChoiceModal();
+                }, 300);
+            });
+
+            // 在关闭信件按钮被注释掉的情况下，添加点击任意处关闭功能
+            if (!letterClose) {
+                letterContainer.addEventListener('click', function (e) {
+                    // 只有当点击区域是信件容器本身而不是信件内容时才关闭
+                    if (e.target === letterContainer) {
+                        letterContainer.classList.remove('show');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
