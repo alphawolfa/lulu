@@ -63,12 +63,14 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             transform-style: preserve-3d;
             perspective: 1000px;
-            transition: transform 0.5s;
+            transition: transform 0.5s, box-shadow 0.3s;
             cursor: pointer;
+            animation: floating 4s ease-in-out infinite;
         }
 
         .envelope:hover {
-            transform: scale(1.05);
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
         }
 
         .envelope-top {
@@ -84,11 +86,12 @@
             transform-origin: top;
             transform: rotateX(180deg);
             z-index: 3;
-            transition: transform 0.5s;
+            transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
         }
 
         .envelope:hover .envelope-top {
-            transform: rotateX(0deg);
+            transform: rotateX(30deg);
+            box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.1);
         }
 
         .envelope-body {
@@ -96,11 +99,37 @@
             width: 100%;
             height: 100%;
             background-color: #e6e6e6;
+            background-image: linear-gradient(135deg, #e6e6e6 0%, #f5f5f5 50%, #e6e6e6 100%);
             border-radius: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 添加左右两侧的信封褶边效果 */
+        .envelope-body::before,
+        .envelope-body::after {
+            content: "";
+            position: absolute;
+            width: 0;
+            height: 0;
+            bottom: 0;
+        }
+
+        .envelope-body::before {
+            left: 0;
+            border-left: 150px solid transparent;
+            border-bottom: 100px solid #d9d9d9;
+            z-index: 1;
+        }
+
+        .envelope-body::after {
+            right: 0;
+            border-right: 150px solid transparent;
+            border-bottom: 100px solid #d9d9d9;
+            z-index: 1;
         }
 
         .envelope-pattern {
@@ -109,6 +138,8 @@
             height: 90%;
             border: 2px solid #d1d1d1;
             border-radius: 5px;
+            background-image:
+                repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(220, 220, 220, 0.5) 10px, rgba(220, 220, 220, 0.5) 20px);
         }
 
         .envelope-text {
@@ -118,6 +149,13 @@
             color: #333;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
             font-family: "楷体", "KaiTi", serif;
+            z-index: 2;
+            transition: transform 0.3s, text-shadow 0.3s;
+        }
+
+        .envelope:hover .envelope-text {
+            transform: translateY(-5px);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .envelope-seal {
@@ -125,6 +163,7 @@
             width: 40px;
             height: 40px;
             background-color: #d00;
+            background-image: radial-gradient(circle, #ff3b3b, #d00);
             border-radius: 50%;
             right: 20px;
             top: 20px;
@@ -135,8 +174,23 @@
         }
 
         .envelope-seal:hover {
-            transform: scale(1.1);
+            transform: scale(1.2) rotate(15deg);
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1.2) rotate(15deg);
+            }
+
+            50% {
+                transform: scale(1.3) rotate(15deg);
+            }
+
+            100% {
+                transform: scale(1.2) rotate(15deg);
+            }
         }
 
         .envelope-seal::after {
@@ -171,10 +225,24 @@
             pointer-events: auto;
         }
 
+        /* 添加信件内容飘出动画 */
+        @keyframes letterAppear {
+            0% {
+                opacity: 0;
+                transform: translateY(20px) scale(0.9);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
         .letter-content {
             width: 80%;
             max-width: 600px;
             background-color: #fff8f8;
+            background-image: linear-gradient(to bottom, #fff8f8, #fff0f0);
             padding: 40px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
@@ -185,6 +253,20 @@
             position: relative;
             text-align: left;
             overflow: hidden;
+            animation: letterAppear 0.8s forwards;
+            border: 1px solid rgba(255, 100, 150, 0.2);
+        }
+
+        .letter-content::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, #ff9ab0, #ffd1dc, #ff9ab0);
+            border-radius: 5px 5px 0 0;
+            opacity: 0.7;
         }
 
         .letter-text {
@@ -238,6 +320,7 @@
 
         .modal-content {
             background-color: #fff;
+            background-image: linear-gradient(to bottom, #fff, #faf2f4);
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
@@ -246,6 +329,7 @@
             width: 80%;
             transform: scale(0.9);
             transition: transform 0.3s;
+            border: 1px solid rgba(255, 100, 150, 0.2);
         }
 
         .modal.show .modal-content {
@@ -273,23 +357,71 @@
             font-size: 18px;
             cursor: pointer;
             font-family: "楷体", "KaiTi", serif;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.6);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(100, 100);
+                opacity: 0;
+            }
+        }
+
+        .modal-button:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
         }
 
         .modal-button:hover {
             transform: translateY(-3px);
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 7px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
         .modal-button.yes {
             background-color: #ff4d80;
+            background-image: linear-gradient(to right, #ff4d80, #ff758c);
             color: white;
+            box-shadow: 0 4px 15px rgba(255, 77, 128, 0.4);
+        }
+
+        .modal-button.yes:hover {
+            background-image: linear-gradient(to right, #ff3d70, #ff6580);
         }
 
         .modal-button.no {
             background-color: #f8f8f8;
             color: #666;
             border: 1px solid #ddd;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-button.no:hover {
+            background-color: #f0f0f0;
         }
 
         /* 跳动的桃心 */
@@ -306,7 +438,7 @@
             z-index: 30;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.5s;
+            transition: opacity 0.8s;
         }
 
         .heart-container.show {
@@ -319,8 +451,10 @@
             width: 100px;
             height: 100px;
             background-color: #ff5a8c;
+            background-image: linear-gradient(135deg, #ff5a8c, #ff3a7c);
             transform: rotate(45deg);
             animation: heartbeat 1.2s infinite ease-in-out;
+            box-shadow: 0 10px 30px rgba(255, 90, 140, 0.4);
         }
 
         .heart::before,
@@ -330,7 +464,9 @@
             width: 100px;
             height: 100px;
             background-color: #ff5a8c;
+            background-image: linear-gradient(135deg, #ff5a8c, #ff3a7c);
             border-radius: 50%;
+            box-shadow: 0 5px 20px rgba(255, 90, 140, 0.4);
         }
 
         .heart::before {
@@ -354,6 +490,20 @@
             font-weight: bold;
             font-family: "楷体", "KaiTi", serif;
             text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 1s forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes heartbeat {
@@ -386,11 +536,11 @@
 
             0%,
             100% {
-                transform: translateY(0);
+                transform: translateY(0) rotate(0deg);
             }
 
             50% {
-                transform: translateY(-20px);
+                transform: translateY(-15px) rotate(1deg);
             }
         }
     </style>
@@ -418,7 +568,7 @@
         <!-- 选择弹窗 -->
         <div class="modal" id="choice-modal">
             <div class="modal-content">
-                <div class="modal-title">小露露，做我女朋友好不好</div>
+                <div class="modal-title">XXX，做我女朋友好不好</div>
                 <div class="modal-buttons">
                     <button class="modal-button yes" id="yes-button">好</button>
                     <button class="modal-button no" id="no-button">不好</button>
@@ -614,8 +764,9 @@
             const letterContainer = document.getElementById('letter-container');
             const letterText = document.getElementById('letter-text');
             const letterClose = document.getElementById('letter-close');
+            const envelope = document.querySelector('.envelope');
 
-            const letterContent = "今天是23号，是你的出生日，我希望也是我们的恋爱纪念日。我喜欢你，喜欢你的善良、可爱、温柔、情绪成熟、对生活的热忱、对万事万物的理解，喜欢你眼神的温度、让我感到温暖的能量场，总之喜欢独特的你、唯一的你。";
+            const letterContent = "今天是23号，是你的出生日，我希望也是我们的恋爱纪念日。我喜欢你，喜欢你的善良、可爱、温柔、情绪成熟、对生活的热忱、对万事万物的理解，喜欢你眼神的温度、喜欢你身上的能量，总之喜欢独特的你、唯一的你。";
 
             function typeLetterEffect(text, element, speed = 200) {
                 // 清空现有内容
@@ -643,17 +794,37 @@
                         if (index === spans.length - 1) {
                             setTimeout(() => {
                                 showChoiceModal();
-                            }, 1000); // 等待1秒后显示弹窗
+                            }, 2000); // 等待1秒后显示弹窗
                         }
                     }, index * speed);
                 });
             }
 
-            // 点击桃心展示信件
+            // 点击信封也能展示信件
+            envelope.addEventListener('click', function (e) {
+                // 排除点击桃心印章的情况，因为桃心有自己的事件处理
+                if (!e.target.closest('#heart-seal')) {
+                    letterContainer.classList.add('show');
+                    // 添加信封打开动画
+                    this.style.transform = 'scale(0.95) translateY(5px)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 300);
+                    // 启动打字效果
+                    typeLetterEffect(letterContent, letterText, 300);
+                }
+            });
+
+            // 恢复桃心点击功能
             heartSeal.addEventListener('click', function () {
                 letterContainer.classList.add('show');
+                // 添加点击效果
+                this.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 200);
                 // 启动打字效果
-                typeLetterEffect(letterContent, letterText, 50);
+                typeLetterEffect(letterContent, letterText, 200);
             });
 
             // 处理选择弹窗
@@ -666,6 +837,26 @@
 
             function showChoiceModal() {
                 choiceModal.classList.add('show');
+
+                // 为按钮添加点击波纹效果
+                document.querySelectorAll('.modal-button').forEach(button => {
+                    button.addEventListener('click', function (e) {
+                        const rect = e.target.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+
+                        const ripple = document.createElement('span');
+                        ripple.className = 'ripple';
+                        ripple.style.left = `${x}px`;
+                        ripple.style.top = `${y}px`;
+
+                        this.appendChild(ripple);
+
+                        setTimeout(() => {
+                            ripple.remove();
+                        }, 600);
+                    });
+                });
             }
 
             // 点击"好"按钮
@@ -673,6 +864,8 @@
                 choiceModal.classList.remove('show');
                 setTimeout(() => {
                     finalHeart.classList.add('show');
+                    // 播放音效或其他庆祝效果
+                    createConfetti();
                 }, 300);
             });
 
@@ -701,6 +894,49 @@
                     }
                 });
             }
+
+            // 添加五彩纸屑特效
+            function createConfetti() {
+                for (let i = 0; i < 100; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.style.position = 'fixed';
+                    confetti.style.zIndex = '40';
+                    confetti.style.width = Math.random() * 10 + 5 + 'px';
+                    confetti.style.height = Math.random() * 5 + 3 + 'px';
+                    confetti.style.top = '-50px';
+                    confetti.style.left = Math.random() * window.innerWidth + 'px';
+                    confetti.style.opacity = Math.random() * 0.8 + 0.2;
+                    confetti.style.borderRadius = '2px';
+                    confetti.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
+
+                    // 随机颜色
+                    const colors = ['#ff5a8c', '#ffb3c6', '#ffd6e0', '#ff8fab', '#ff6593'];
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+
+                    // 动画
+                    confetti.style.animation = `confetti ${Math.random() * 3 + 2}s linear forwards`;
+
+                    document.body.appendChild(confetti);
+
+                    // 动画结束后移除元素
+                    confetti.addEventListener('animationend', function () {
+                        this.remove();
+                    });
+                }
+            }
+
+            // 添加五彩纸屑的动画
+            const styleSheet = document.styleSheets[0];
+            styleSheet.insertRule(`
+                @keyframes confetti {
+                    0% {
+                        transform: translateY(0) rotate(0deg);
+                    }
+                    100% {
+                        transform: translateY(${window.innerHeight + 100}px) rotate(${Math.random() * 360}deg);
+                    }
+                }
+            `, styleSheet.cssRules.length);
         });
     </script>
 </body>
