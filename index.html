@@ -204,12 +204,12 @@
 
         /* 信件内容样式 */
         .letter {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
+            background-color: transparent;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -542,6 +542,171 @@
                 transform: translateY(-15px) rotate(1deg);
             }
         }
+
+        /* 移动设备适配 */
+        @media (max-width: 768px) {
+            .envelope {
+                width: 280px;
+                height: 180px;
+            }
+
+            .envelope-top {
+                border-bottom: 90px solid #e6e6e6;
+                border-left: 140px solid transparent;
+                border-right: 140px solid transparent;
+            }
+
+            .envelope-body::before {
+                border-left: 140px solid transparent;
+                border-bottom: 90px solid #d9d9d9;
+            }
+
+            .envelope-body::after {
+                border-right: 140px solid transparent;
+                border-bottom: 90px solid #d9d9d9;
+            }
+
+            .envelope-text {
+                font-size: 24px;
+            }
+
+            .letter-content {
+                width: 90%;
+                padding: 30px 20px;
+                font-size: 18px;
+            }
+
+            .modal-content {
+                width: 90%;
+                padding: 25px 15px;
+            }
+
+            .modal-title {
+                font-size: 20px;
+                margin-bottom: 25px;
+            }
+
+            .modal-button {
+                padding: 10px 20px;
+                font-size: 16px;
+            }
+
+            .heart {
+                width: 80px;
+                height: 80px;
+            }
+
+            .heart::before,
+            .heart::after {
+                width: 80px;
+                height: 80px;
+            }
+
+            .heart::before {
+                top: -40px;
+            }
+
+            .heart::after {
+                left: -40px;
+            }
+
+            .heart-message {
+                font-size: 26px;
+                bottom: 15%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .envelope {
+                width: 260px;
+                height: 170px;
+            }
+
+            .envelope-top {
+                border-bottom: 85px solid #e6e6e6;
+                border-left: 130px solid transparent;
+                border-right: 130px solid transparent;
+            }
+
+            .envelope-body::before {
+                border-left: 130px solid transparent;
+                border-bottom: 85px solid #d9d9d9;
+            }
+
+            .envelope-body::after {
+                border-right: 130px solid transparent;
+                border-bottom: 85px solid #d9d9d9;
+            }
+
+            .envelope-text {
+                font-size: 22px;
+            }
+
+            .envelope-seal {
+                width: 35px;
+                height: 35px;
+                right: 15px;
+                top: 15px;
+            }
+
+            .envelope-seal::after {
+                font-size: 18px;
+            }
+
+            .letter-content {
+                font-size: 16px;
+                line-height: 1.6;
+                padding: 25px 15px;
+            }
+
+            .modal-content {
+                padding: 20px 10px;
+            }
+
+            .modal-title {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+            .modal-buttons {
+                gap: 15px;
+            }
+
+            .modal-button {
+                padding: 8px 18px;
+                font-size: 15px;
+            }
+
+            .heart {
+                width: 70px;
+                height: 70px;
+            }
+
+            .heart::before,
+            .heart::after {
+                width: 70px;
+                height: 70px;
+            }
+
+            .heart::before {
+                top: -35px;
+            }
+
+            .heart::after {
+                left: -35px;
+            }
+
+            .heart-message {
+                font-size: 22px;
+            }
+        }
+
+        /* 隐藏信封的类 */
+        .envelope.hidden {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
     </style>
 </head>
 
@@ -768,6 +933,9 @@
             const letterContent = "今天是23号，是你的出生日，我希望也是我们的恋爱纪念日。我喜欢你，喜欢你的善良、可爱、温柔、情绪成熟、对生活的热忱、对万事万物的理解，喜欢你眼神的温度、喜欢你身上的能量，总之喜欢独特的你、唯一的你。";
 
             function typeLetterEffect(text, element, speed = 200) {
+                // 隐藏信封
+                envelope.classList.add('hidden');
+
                 // 清空现有内容
                 element.innerHTML = '';
 
@@ -793,7 +961,7 @@
                         if (index === spans.length - 1) {
                             setTimeout(() => {
                                 showChoiceModal();
-                            }, 2000); // 等待1秒后显示弹窗
+                            }, 2000); // 等待2秒后显示弹窗
                         }
                     }, index * speed);
                 });
@@ -885,14 +1053,16 @@
             });
 
             // 在关闭信件按钮被注释掉的情况下，添加点击任意处关闭功能
-            if (!letterClose) {
-                letterContainer.addEventListener('click', function (e) {
-                    // 只有当点击区域是信件容器本身而不是信件内容时才关闭
-                    if (e.target === letterContainer) {
-                        letterContainer.classList.remove('show');
-                    }
-                });
-            }
+            // if (!letterClose) {
+            //     letterContainer.addEventListener('click', function (e) {
+            //         // 只有当点击区域是信件容器本身而不是信件内容时才关闭
+            //         if (e.target === letterContainer) {
+            //             letterContainer.classList.remove('show');
+            //             // 显示信封
+            //             envelope.classList.remove('hidden');
+            //         }
+            //     });
+            // }
 
             // 添加五彩纸屑特效
             function createConfetti() {
